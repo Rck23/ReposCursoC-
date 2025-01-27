@@ -1,0 +1,66 @@
+@page "/product"
+@inject ILogger<Products> logger; 
+@inject IProductService productService; 
+@inject IJSRuntime JSRuntime 
+@inject IToastService toastService
+
+<PageTitle>Products</PageTitle>
+
+<ModuleTitle Title="Products" /> 
+
+<button class="btn btn-dark" @onclick="@(()=> NavigationManager.NavigateTo("/addproduct"))">Add producto</button>
+
+
+@if(products?.Count > 0){
+     <div class="products-container">
+        @foreach (var product in products)
+        {
+            <div class="card">
+                <img class="card-img-top" src="@product.Images[0]" alt="@product.Title" loading="lazy" width="270" height="210"/>
+                <div class="card-body">
+                    <h5><b>@product.Title</b></h5>
+                    <p>@product.Price?.ToString("C")</p>
+                    <button class="btn btn-danger btn-delete" title="Delete" @onclick="@(() => DeleteProduct(product))">
+                        <span class="oi oi-trash"></span>
+                    </button>
+                    <button class="btn btn-success" title="Delete" @onclick="@(() => GoToEditProduct(product.Id))">
+                        <span class="oi oi-pencil"></span>
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+}else{
+    <h2>No hay productos para mostrar</h2>
+}
+
+@code {
+
+    private List<Product>? products; 
+
+    protected override async Task OnInitializedAsync(){
+         await GetProducts();
+    }
+
+    private async Task GetProducts(){
+        products = await productService.Get();    
+    } 
+
+    private async Task DeleteProduct(Products product){
+
+        if(!await JSRuntime.InvokeAsync<bool>("confirm", $"Estas seguro de eliminar {product.Title}")){
+            return;     
+        }
+
+        await productService.Delete(product.Id); 
+        
+        toastService.ShowSuccess("Producto eliminado", "El producto se elimino correctamente");
+
+        await GetProducts();
+    }
+
+    private void GoToEditProduct(int productId)
+    {
+        NavigationManager.NavigateTo($"/editproduct/{productId}");
+    }
+}

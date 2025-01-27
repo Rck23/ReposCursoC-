@@ -1,0 +1,41 @@
+@page "/addproduct"
+@inject IProductService productService 
+@inject ICategoryService categoryService
+@inject NavigationManager navigationManager
+
+<PageTitle>Add - Products</PageTitle>
+
+<ModuleTitle Title="Add product" />
+
+<button class="btn btn-dark" @onclick="@(()=> NavigationManager.NavigateTo("/product"))">Regresar</button>
+
+<EditForm Model="@product" OnSubmit="@Save"> 
+    <div class="row">
+        <div class="form-group col-8">
+            <label class="col-form-label" for="title">
+                Title
+            </label>
+            <InputText id="title" @bind-Value="product.Title" required class="form-control"></InputText>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+    private Product product = new(); 
+
+    private List<Category> categories = new List<Category>(); 
+    
+    protected override async Task OnInitializedAsync(){
+        categories = await categoryService.Get(); 
+    }
+
+    private async Task Save(){
+        product.Images = new string[1] {product.Image};
+
+        await productService.Add(product); 
+
+        navigationManager.NavigateTo("/product");
+
+    }
+}
